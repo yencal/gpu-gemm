@@ -102,10 +102,10 @@ inline void WriteCSV(const std::vector<BenchmarkResult>& results, const std::str
     file << "Label,N,TimeMs,TFLOPS\n";
 
     for (const auto& r : results) {
-        file << r.label << ","
-             << r.N << ","
-             << r.time_ms << ","
-             << r.tflops << "\n";
+        file << "\"" << r.label << "\"," 
+                << r.N << "," 
+                << r.time_ms << ","
+                << r.tflops << "\n";
     }
 
     file.close();
