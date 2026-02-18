@@ -46,20 +46,20 @@ int main(int argc, char** argv)
 
         // Benchmark cuBLAS
         results.push_back(RunCuBLASBenchmark<SGEMMCuBLAS>(
-            "cuBLAS", handle, M, N, K, alpha, d_A, d_B, beta, d_C));
+            "00cuBLAS", handle, M, N, K, alpha, d_A, d_B, beta, d_C));
 
         // Benchmark our kernels
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMBaseline<32, 32>>(
-            "Baseline<32,32>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+            "01Baseline<32,32>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMBlockTiling<32, 32, 32>>(
-            "BlockTiling<32,32,32>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+            "02BlockTiling<32,32,32>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMThreadTiling<64, 64, 8, 8, 8>>(
-            "ThreadTiling<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+            "03ThreadTiling<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
         // Cleanup
         CHECK_CUDA(cudaFree(d_A));
