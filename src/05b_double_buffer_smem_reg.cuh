@@ -32,8 +32,6 @@ __global__ void sgemm_double_buffer_smem_reg(
     int M, int N, int K, float alpha,
     const float *A, const float *B, float beta, float *C)
 {
-    constexpr int NUM_THREADS = (BM / TM) * (BN / TN);
-
     __shared__ float As[2][BK * BM];
     __shared__ float Bs[2][BK * BN];
     
