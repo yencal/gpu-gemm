@@ -147,8 +147,8 @@ __global__ void sgemm_double_buffer_smem_reg(
     uint numTiles = K / BK;
     
     // ====== PROLOGUE ======
-    loadTileA<BM, BN, BK, TM, TN, NUM_THREADS>(A, As[0], tid, K);
-    loadTileB<BM, BN, BK, TM, TN, NUM_THREADS>(B, Bs[0], tid, N);
+    loadTileA<BM, BN, BK, TM, TN>(A, As[0], tid, K);
+    loadTileB<BM, BN, BK, TM, TN>(B, Bs[0], tid, N);
     __syncthreads();
     
     A += BK;
@@ -162,8 +162,8 @@ __global__ void sgemm_double_buffer_smem_reg(
     
     for (uint tile = 1; tile < numTiles; ++tile) {
         // Prefetch next tile to smem
-        loadTileA<BM, BN, BK, TM, TN, NUM_THREADS>(A, As[smemWrite], tid, K);
-        loadTileB<BM, BN, BK, TM, TN, NUM_THREADS>(B, Bs[smemWrite], tid, N);
+        loadTileA<BM, BN, BK, TM, TN>(A, As[smemWrite], tid, K);
+        loadTileB<BM, BN, BK, TM, TN>(B, Bs[smemWrite], tid, N);
         
         A += BK;
         B += BK * N;

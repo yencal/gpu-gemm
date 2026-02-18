@@ -11,6 +11,8 @@
 #include "03_thread_tiling.cuh"
 #include "04a_thread_tiling_vectorized_gmem.cuh"
 #include "04b_thread_tiling_vectorized_gmem_smem.cuh"
+#include "05a_double_buffer_smem.cuh"
+#include "05b_double_buffer_smem_reg.cuh"
 
 int main(int argc, char** argv)
 {
