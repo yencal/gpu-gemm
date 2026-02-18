@@ -9,7 +9,8 @@
 #include "01_baseline.cuh"
 #include "02_block_tiling.cuh"
 #include "03_thread_tiling.cuh"
-
+#include "04a_thread_tiling_vectorized_gmem.cuh"
+#include "04b_thread_tiling_vectorized_gmem_smem.cuh"
 
 int main(int argc, char** argv)
 {
@@ -60,6 +61,14 @@ int main(int argc, char** argv)
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMThreadTiling<64, 64, 8, 8, 8>>(
             "03ThreadTiling<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+
+        CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
+        results.push_back(RunBenchmark<SGEMMThreadTilingVectorizedGmem<64, 64, 8, 8, 8>>(
+            "04aThreadTilingVecGmem<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+
+        CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
+        results.push_back(RunBenchmark<SGEMMThreadTilingVectorizedGmemSmem<64, 64, 8, 8, 8>>(
+            "04bThreadTilingVecGmem<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
         // Cleanup
         CHECK_CUDA(cudaFree(d_A));

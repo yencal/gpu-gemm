@@ -21,13 +21,13 @@ for label in sorted(labels):
     )
 
 # Formatting
-plt.xlabel("Matrix Size (N)", fontsize=14)
+sizes = sorted(df["N"].unique())
+plt.xticks(sizes, [str(s) for s in sizes])
+plt.xlabel("Matrix Size (M=N=K)", fontsize=14)
 plt.ylabel("TFLOPS", fontsize=14)
 plt.title("SGEMM Performance", fontsize=16)
 plt.legend(fontsize=10)
-plt.minorticks_on()
 plt.grid(True, which="major", alpha=0.3)
-plt.grid(True, which="minor", alpha=0.15)
 plt.tight_layout()
 
 # Save high quality PNG
