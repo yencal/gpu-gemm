@@ -68,7 +68,15 @@ int main(int argc, char** argv)
 
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMThreadTilingVectorizedGmemSmem<64, 64, 8, 8, 8>>(
-            "04bThreadTilingVecGmem<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+            "04bThreadTilingVecGmemSmem<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+
+        CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
+        results.push_back(RunBenchmark<SGEMMDoubleBufferSmem<64, 64, 8, 8, 8>>(
+            "05aDoubleBufferSmem<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+
+        CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
+        results.push_back(RunBenchmark<SGEMMDoubleBufferSmemReg<64, 64, 8, 8, 8>>(
+            "05bDoubleBufferSmemReg<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
         // Cleanup
         CHECK_CUDA(cudaFree(d_A));
