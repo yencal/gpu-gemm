@@ -64,21 +64,31 @@ int main(int argc, char** argv)
         results.push_back(RunBenchmark<SGEMMThreadTiling<64, 64, 8, 8, 8>>(
             "03ThreadTiling<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
+        // 04a - try different tile sizes
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMThreadTilingVectorizedGmem<64, 64, 8, 8, 8>>(
-            "04aThreadTilingVecGmem<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+            "04a<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
-        results.push_back(RunBenchmark<SGEMMThreadTilingVectorizedGmemSmem<64, 64, 8, 8, 8>>(
-            "04bThreadTilingVecGmemSmem<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+        results.push_back(RunBenchmark<SGEMMThreadTilingVectorizedGmem<128, 128, 8, 8, 8>>(
+            "04a<128,128,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
-        results.push_back(RunBenchmark<SGEMMDoubleBufferSmem<64, 64, 8, 8, 8>>(
-            "05aDoubleBufferSmem<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+        results.push_back(RunBenchmark<SGEMMThreadTilingVectorizedGmem<128, 128, 16, 8, 8>>(
+            "04a<128,128,16,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
+        // 05b - try different tile sizes
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMDoubleBufferSmemReg<64, 64, 8, 8, 8>>(
-            "05bDoubleBufferSmemReg<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+            "05b<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+
+        CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
+        results.push_back(RunBenchmark<SGEMMDoubleBufferSmemReg<128, 128, 8, 8, 8>>(
+            "05b<128,128,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+
+        CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
+        results.push_back(RunBenchmark<SGEMMDoubleBufferSmemReg<128, 128, 16, 8, 8>>(
+            "05b<128,128,16,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
         // Cleanup
         CHECK_CUDA(cudaFree(d_A));
