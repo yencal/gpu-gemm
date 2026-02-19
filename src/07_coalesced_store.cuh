@@ -154,7 +154,9 @@ __global__ void sgemm_coalesced_store(
     processTile07<BM, BN, BK, TM, TN>(
         smem.compute.As[smemRead], smem.compute.Bs[smemRead], 
         regM, regN, tmp, ty, tx);
-    
+        
+    __syncthreads();
+
     // ====== COALESCED STORE (reusing smem as Cs) ======
     storeResultCoalesced<BM, BN, TM, TN, CHUNK_ROWS>(
         C, tmp, smem.Cs, blockRow, blockCol, N, alpha, beta, tid, ty, tx);
