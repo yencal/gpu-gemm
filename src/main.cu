@@ -13,6 +13,7 @@
 #include "04b_thread_tiling_vectorized_gmem_smem.cuh"
 #include "05a_double_buffer_smem.cuh"
 #include "05b_double_buffer_smem_reg.cuh"
+#include "06_bank_conflict_free.cuh"
 
 int main(int argc, char** argv)
 {
@@ -47,48 +48,49 @@ int main(int argc, char** argv)
         SGEMMCuBLAS::Run(handle, M, N, K, alpha, d_A, d_B, beta, d_C_ref);
         CHECK_CUDA(cudaDeviceSynchronize());
 
-        // Benchmark cuBLAS
+        // Benchmark cuBLAS (reference)
         results.push_back(RunCuBLASBenchmark<SGEMMCuBLAS>(
-            "00cuBLAS", handle, M, N, K, alpha, d_A, d_B, beta, d_C));
+            "00_cuBLAS", handle, M, N, K, alpha, d_A, d_B, beta, d_C));
 
-        // Benchmark our kernels
+        // 01: Naive baseline - one thread per output element
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMBaseline<32, 32>>(
-            "01Baseline<32,32>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+            "01_Baseline", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
+        // 02: Block tiling - shared memory for A and B tiles
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMBlockTiling<32, 32, 32>>(
-            "02BlockTiling<32,32,32>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+            "02_BlockTiling", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
+        // 03: Thread tiling - each thread computes TM×TN output tile
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMThreadTiling<64, 64, 8, 8, 8>>(
-            "03ThreadTiling<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+            "03_ThreadTiling", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
-        // 04a - try different tile sizes
-        CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
-        results.push_back(RunBenchmark<SGEMMThreadTilingVectorizedGmem<64, 64, 8, 8, 8>>(
-            "04a<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
-
-        CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
-        results.push_back(RunBenchmark<SGEMMThreadTilingVectorizedGmem<128, 128, 8, 8, 8>>(
-            "04a<128,128,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
-
+        // 04a: + Vectorized global memory (float4 loads/stores)
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMThreadTilingVectorizedGmem<128, 128, 16, 8, 8>>(
-            "04a<128,128,16,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+            "04a_VecGmem", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
-        // 05b - try different tile sizes
+        // 04b: + Vectorized shared memory (float4 loads from smem)
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
-        results.push_back(RunBenchmark<SGEMMDoubleBufferSmemReg<64, 64, 8, 8, 8>>(
-            "05b<64,64,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+        results.push_back(RunBenchmark<SGEMMThreadTilingVectorizedGmemSmem<128, 128, 16, 8, 8>>(
+            "04b_VecGmemSmem", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
+        // 05a: + Shared memory double buffering (hide gmem latency)
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
-        results.push_back(RunBenchmark<SGEMMDoubleBufferSmemReg<128, 128, 8, 8, 8>>(
-            "05b<128,128,8,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+        results.push_back(RunBenchmark<SGEMMDoubleBufferSmem<128, 128, 16, 8, 8>>(
+            "05a_DoubleBufferSmem", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
+        // 05b: + Register double buffering (hide smem latency)
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMDoubleBufferSmemReg<128, 128, 16, 8, 8>>(
-            "05b<128,128,16,8,8>", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+            "05b_DoubleBufferSmemReg", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+
+        // 06: + XOR swizzle (eliminate bank conflicts)
+        CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
+        results.push_back(RunBenchmark<SGEMMBankConflictFree<128, 128, 16, 8, 8>>(
+            "06_Swizzle", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
         // Cleanup
         CHECK_CUDA(cudaFree(d_A));
