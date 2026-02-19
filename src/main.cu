@@ -16,6 +16,7 @@
 #include "06_bank_conflict_free.cuh"
 #include "07_coalesced_store.cuh"
 #include "08_async_copy.cuh"
+#include "08b_async_copy_both.cuh"
 
 int main(int argc, char** argv)
 {
@@ -101,6 +102,10 @@ int main(int argc, char** argv)
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMAsyncCopy<128, 128, 16, 8, 8>>(
             "08_AsyncCopy", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+
+        CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
+        results.push_back(RunBenchmark<SGEMMAsyncCopyBoth<128, 128, 16, 8, 8>>(
+            "08b_AsyncCopyBoth", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
         // Cleanup
         CHECK_CUDA(cudaFree(d_A));
