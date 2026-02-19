@@ -14,6 +14,7 @@
 #include "05a_double_buffer_smem.cuh"
 #include "05b_double_buffer_smem_reg.cuh"
 #include "06_bank_conflict_free.cuh"
+#include "07_coalesced_store.cuh"
 
 int main(int argc, char** argv)
 {
@@ -91,6 +92,10 @@ int main(int argc, char** argv)
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMBankConflictFree<128, 128, 16, 8, 8>>(
             "06_Swizzle", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+
+        CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
+        results.push_back(RunBenchmark<SGEMMCoalescedStore<128, 128, 16, 8, 8>>(
+            "07_CoalescedStore", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
         // Cleanup
         CHECK_CUDA(cudaFree(d_A));
