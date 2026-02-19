@@ -5,6 +5,7 @@
 
 #include <cuda_runtime.h>
 #include "utils.cuh"
+#include "sgemm_helpers.cuh"
 #include "sgemm_helpers_swizzle.cuh"
 
 // Process tile with register double buffering (using swizzled loads)
