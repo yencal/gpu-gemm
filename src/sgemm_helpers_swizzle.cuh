@@ -8,10 +8,10 @@
 // Swizzle index for 4-float chunk granularity
 // Logical (row, col) → physical index with XOR swizzle
 __device__ __forceinline__ uint swizzle_idx(uint row, uint col, uint stride) {
-    uint chunk = col / 4;
-    uint within = col % 4;
+    uint chunk = col >> 2;       // col / 4
+    uint within = col & 3;       // col % 4
     uint swizzled_chunk = chunk ^ row;
-    return row * stride + swizzled_chunk * 4 + within;
+    return row * stride + (swizzled_chunk << 2) + within;
 }
 
 // Load A tile from GMEM to SMEM (transposed, with swizzle)
