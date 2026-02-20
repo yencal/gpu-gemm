@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <cuda_pipeline.h>
 
 // Load A tile from GMEM to SMEM (transposed)
 template <int BM, int BN, int BK, int TM, int TN>
