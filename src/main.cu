@@ -17,7 +17,7 @@
 
 int main(int argc, char** argv)
 {
-    std::vector<int> sizes = {1024, 2048, 4096, 8192};
+    std::vector<int> sizes = {512, 1024, 2048, 4096, 8192};
     std::vector<BenchmarkResult> results;
 
     float alpha = 1.0f;
