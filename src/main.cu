@@ -14,6 +14,7 @@
 #include "05a_double_buffer_smem.cuh"
 #include "05b_double_buffer_smem_reg.cuh"
 #include "06_async_copy.cuh"
+#include "autotune.cuh"
 
 int main(int argc, char** argv)
 {
@@ -25,6 +26,9 @@ int main(int argc, char** argv)
 
     cublasHandle_t handle;
     CHECK_CUBLAS(cublasCreate(&handle));
+
+    // ========== AUTOTUNE ==========
+    RunAutotune<AsyncCopyTag>(GetSGEMMVariants<SGEMMAsyncCopy>());
 
     for (int N : sizes) {
         int M = N, K = N;
@@ -87,10 +91,15 @@ int main(int argc, char** argv)
         results.push_back(RunBenchmark<SGEMMDoubleBufferSmemReg<128, 128, 16, 8, 8>>(
             "05b_DoubleBufferSmemReg", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
-        // 06: + Asynchronous memory copies (cp.async) for GMEM→SMEM
+        // 06: + Asynchronous memory copies (cp.async) for GMEM->SMEM
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMAsyncCopy<128, 128, 16, 8, 8>>(
             "06_AsyncCopy", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+            
+        // Autotuned kernel
+        CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
+        results.push_back(RunBenchmark<Autotuned<AsyncCopyTag>>(
+            "06_AsyncCopy_Autotuned", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
         // Cleanup
         CHECK_CUDA(cudaFree(d_A));

@@ -1,5 +1,5 @@
 // 06_async_copy.cuh
-// SGEMM with asynchronous memory copies (cp.async) for GMEM→SMEM
+// SGEMM with asynchronous memory copies (cp.async) for GMEM->SMEM
 // Ampere+ feature: bypasses registers, better latency hiding
 
 #pragma once
