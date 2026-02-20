@@ -34,4 +34,4 @@ python3 scripts/plot_results.py gemm_results.csv
 
 ## Results
 * **NVIDIA H200 SXM (141 GB HBM3e)**
-![GEMM Performance](figures/gemm_plot.png)
+![GEMM Performance](figures/gemm_plot_h200.png)
