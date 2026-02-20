@@ -37,6 +37,26 @@ __device__ void loadTileB(const float *B, float *Bs, uint tid, uint N) {
     }
 }
 
+// Async load B tile from GMEM to SMEM (contiguous, no transpose needed)
+template <int BM, int BN, int BK, int TM, int TN>
+__device__ void loadTileBAsync(const float *B, float *Bs, uint tid, uint N) {
+    constexpr int NUM_THREADS = (BM / TM) * (BN / TN);
+    constexpr uint numBPerThread = (BK * BN) / (NUM_THREADS * 4);
+    
+    for (uint i = 0; i < numBPerThread; ++i) {
+        uint idx = tid + i * NUM_THREADS;
+        uint bRow = idx / (BN / 4);
+        uint bCol = (idx % (BN / 4)) * 4;
+        
+        // Async copy 16 bytes (float4) directly GMEM → SMEM
+        __pipeline_memcpy_async(
+            &Bs[bRow * BN + bCol],
+            &B[bRow * N + bCol],
+            sizeof(float4)
+        );
+    }
+}
+
 // Load fragment from SMEM to registers
 template <int BM, int BN, int BK, int TM, int TN>
 __device__ void loadFragment(const float *As, const float *Bs, 

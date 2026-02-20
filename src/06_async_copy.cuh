@@ -9,26 +9,6 @@
 #include "utils.cuh"
 #include "kernel_helpers.cuh"
 
-// Async load B tile from GMEM to SMEM (contiguous, no transpose needed)
-template <int BM, int BN, int BK, int TM, int TN>
-__device__ void loadTileBAsync(const float *B, float *Bs, uint tid, uint N) {
-    constexpr int NUM_THREADS = (BM / TM) * (BN / TN);
-    constexpr uint numBPerThread = (BK * BN) / (NUM_THREADS * 4);
-    
-    for (uint i = 0; i < numBPerThread; ++i) {
-        uint idx = tid + i * NUM_THREADS;
-        uint bRow = idx / (BN / 4);
-        uint bCol = (idx % (BN / 4)) * 4;
-        
-        // Async copy 16 bytes (float4) directly GMEM → SMEM
-        __pipeline_memcpy_async(
-            &Bs[bRow * BN + bCol],
-            &B[bRow * N + bCol],
-            sizeof(float4)
-        );
-    }
-}
-
 template <int BM, int BN, int BK, int TM, int TN>
 __global__ void sgemm_async_copy(
     int M, int N, int K, float alpha,
@@ -81,7 +61,7 @@ __global__ void sgemm_async_copy(
         B += BK * N;
         
         // Process current tile while async copies are in flight
-        processTile08<BM, BN, BK, TM, TN>(As[smemRead], Bs[smemRead], regM, regN, tmp, ty, tx);
+        processTile<BM, BN, BK, TM, TN>(As[smemRead], Bs[smemRead], regM, regN, tmp, ty, tx);
         
         // Wait for async copies to complete
         __pipeline_wait_prior(0);
@@ -94,7 +74,7 @@ __global__ void sgemm_async_copy(
     }
     
     // ====== EPILOGUE ======
-    processTile08<BM, BN, BK, TM, TN>(As[smemRead], Bs[smemRead], regM, regN, tmp, ty, tx);
+    processTile<BM, BN, BK, TM, TN>(As[smemRead], Bs[smemRead], regM, regN, tmp, ty, tx);
     
     // ====== WRITE RESULTS ======
     storeResult<TM, TN>(C, tmp, rowStart, colStart, M, N, alpha, beta);

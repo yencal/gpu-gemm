@@ -1,5 +1,6 @@
 // 07_threadblock_swizzling.cuh
 // SGEMM with threadblock swizzling for improved L2 cache reuse
+// Builds on 06_async_copy: includes cp.async for GMEM→SMEM transfers
 //
 // Problem: Default block scheduling (row-major order) causes blocks with
 // nearby IDs to access different B columns, leading to poor L2 reuse.
@@ -21,6 +22,7 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <cuda_pipeline.h>
 #include "utils.cuh"
 #include "kernel_helpers.cuh"
 
@@ -86,8 +88,12 @@ __global__ void sgemm_threadblock_swizzling(
     uint numTiles = K / BK;
     
     // ====== PROLOGUE ======
+    // A: manual load (needs transpose)
     loadTileA<BM, BN, BK, TM, TN>(A, As[0], tid, K);
-    loadTileB<BM, BN, BK, TM, TN>(B, Bs[0], tid, N);
+    // B: async load (contiguous)
+    loadTileBAsync<BM, BN, BK, TM, TN>(B, Bs[0], tid, N);
+    __pipeline_commit();
+    __pipeline_wait_prior(0);
     __syncthreads();
     
     A += BK;
@@ -100,22 +106,24 @@ __global__ void sgemm_threadblock_swizzling(
     uint smemRead = 0;
     
     for (uint tile = 1; tile < numTiles; ++tile) {
-        // Prefetch next tile to smem
+        // Issue async copies for next tile
         loadTileA<BM, BN, BK, TM, TN>(A, As[smemWrite], tid, K);
-        loadTileB<BM, BN, BK, TM, TN>(B, Bs[smemWrite], tid, N);
+        loadTileBAsync<BM, BN, BK, TM, TN>(B, Bs[smemWrite], tid, N);
+        __pipeline_commit();
         
         A += BK;
         B += BK * N;
         
-        // Process current tile with register double buffering
+        // Process current tile while async copies are in flight
         processTile<BM, BN, BK, TM, TN>(As[smemRead], Bs[smemRead], regM, regN, tmp, ty, tx);
         
+        // Wait for async copies to complete
+        __pipeline_wait_prior(0);
         __syncthreads();
         
         smemWrite = 1 - smemWrite;
         smemRead = 1 - smemRead;
         
-        // Load first fragment of next tile
         loadFragment<BM, BN, BK, TM, TN>(As[smemRead], Bs[smemRead], regM[0], regN[0], 0, ty, tx);
     }
     
