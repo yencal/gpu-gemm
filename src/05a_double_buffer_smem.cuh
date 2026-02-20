@@ -5,7 +5,7 @@
 
 #include <cuda_runtime.h>
 #include "utils.cuh"
-#include "sgemm_helpers.cuh"
+#include "kernel_helpers.cuh"
 
 template <int BM, int BN, int BK, int TM, int TN>
 __global__ void sgemm_double_buffer_smem(

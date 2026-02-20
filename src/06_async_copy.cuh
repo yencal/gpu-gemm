@@ -1,4 +1,4 @@
-// 08_async_copy.cuh
+// 06_async_copy.cuh
 // SGEMM with asynchronous memory copies (cp.async) for GMEM→SMEM
 // Ampere+ feature: bypasses registers, better latency hiding
 
@@ -7,7 +7,7 @@
 #include <cuda_runtime.h>
 #include <cuda_pipeline.h>
 #include "utils.cuh"
-#include "sgemm_helpers.cuh"
+#include "kernel_helpers.cuh"
 
 // Async load B tile from GMEM to SMEM (contiguous, no transpose needed)
 template <int BM, int BN, int BK, int TM, int TN>
@@ -27,23 +27,6 @@ __device__ void loadTileBAsync(const float *B, float *Bs, uint tid, uint N) {
             sizeof(float4)
         );
     }
-}
-
-template <int BM, int BN, int BK, int TM, int TN>
-__device__ void processTile08(const float *As, const float *Bs,
-                               float regM[2][TM], float regN[2][TN], float *tmp,
-                               uint ty, uint tx) {
-    uint regWrite = 1;
-    uint regRead = 0;
-    
-    #pragma unroll
-    for (uint k = 0; k < BK - 1; ++k) {
-        loadFragment<BM, BN, BK, TM, TN>(As, Bs, regM[regWrite], regN[regWrite], k + 1, ty, tx);
-        outerProduct<TM, TN>(regM[regRead], regN[regRead], tmp);
-        regWrite = 1 - regWrite;
-        regRead = 1 - regRead;
-    }
-    outerProduct<TM, TN>(regM[regRead], regN[regRead], tmp);
 }
 
 template <int BM, int BN, int BK, int TM, int TN>

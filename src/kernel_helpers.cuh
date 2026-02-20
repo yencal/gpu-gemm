@@ -1,4 +1,4 @@
-// sgemm_helpers.cuh
+// kernel_helpers.cuh
 // Common device functions for SGEMM kernels
 
 #pragma once
@@ -68,6 +68,26 @@ __device__ void outerProduct(const float *regM, const float *regN, float *tmp) {
             tmp[m * TN + n] += regM[m] * regN[n];
         }
     }
+}
+
+// Process BK fragments with register double buffering
+template <int BM, int BN, int BK, int TM, int TN>
+__device__ void processTile(const float *As, const float *Bs,
+                            float regM[2][TM], float regN[2][TN], float *tmp,
+                            uint ty, uint tx) {
+    uint regWrite = 1;
+    uint regRead = 0;
+    
+    #pragma unroll
+    for (uint k = 0; k < BK - 1; ++k) {
+        loadFragment<BM, BN, BK, TM, TN>(As, Bs, regM[regWrite], regN[regWrite], k + 1, ty, tx);
+        outerProduct<TM, TN>(regM[regRead], regN[regRead], tmp);
+        regWrite = 1 - regWrite;
+        regRead = 1 - regRead;
+    }
+    
+    // Last fragment
+    outerProduct<TM, TN>(regM[regRead], regN[regRead], tmp);
 }
 
 // Write results to GMEM

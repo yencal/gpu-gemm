@@ -13,12 +13,7 @@
 #include "04b_thread_tiling_vectorized_gmem_smem.cuh"
 #include "05a_double_buffer_smem.cuh"
 #include "05b_double_buffer_smem_reg.cuh"
-// #include "06_bank_conflict_free.cuh"
-// #include "07_coalesced_store.cuh"
-// #include "08_async_copy.cuh"
-// #include "08b_async_copy_both.cuh"
-#include "09_warptiling.cuh"
-#include "10_swizzle.cuh"
+#include "06_async_copy.cuh"
 
 int main(int argc, char** argv)
 {
@@ -92,39 +87,10 @@ int main(int argc, char** argv)
         results.push_back(RunBenchmark<SGEMMDoubleBufferSmemReg<128, 128, 16, 8, 8>>(
             "05b_DoubleBufferSmemReg", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
-        // // 06: + XOR swizzle (eliminate bank conflicts)
-        // CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
-        // results.push_back(RunBenchmark<SGEMMBankConflictFree<128, 128, 16, 8, 8>>(
-        //     "06_Swizzle", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
-
-        // CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
-        // results.push_back(RunBenchmark<SGEMMCoalescedStore<128, 128, 16, 8, 8>>(
-        //     "07_CoalescedStore", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
-
-        // CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
-        // results.push_back(RunBenchmark<SGEMMAsyncCopy<128, 128, 16, 8, 8>>(
-        //     "08_AsyncCopy", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
-
-        // CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
-        // results.push_back(RunBenchmark<SGEMMAsyncCopyBoth<128, 128, 16, 8, 8>>(
-        //     "08b_AsyncCopyBoth", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
-
+        // 06: + Asynchronous memory copies (cp.async) for GMEM→SMEM
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
-        results.push_back(RunBenchmark<SGEMMWarptiling<128, 128, 16, 64, 64, 8, 4, 4>>(
-            "09_Warptiling", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
-
-        // 10: Swizzle with different GROUP_M values
-        CHECK_CUDA(cudaMemset(d_C, 0, (size_t)M * N * sizeof(float)));
-        results.push_back(RunBenchmark<SGEMMSwizzle<128, 128, 16, 8, 8, 4>>(
-            "10_Swizzle_G4", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref, 3, 20));
-        
-        CHECK_CUDA(cudaMemset(d_C, 0, (size_t)M * N * sizeof(float)));
-        results.push_back(RunBenchmark<SGEMMSwizzle<128, 128, 16, 8, 8, 8>>(
-            "10_Swizzle_G8", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref, 3, 20));
-        
-        CHECK_CUDA(cudaMemset(d_C, 0, (size_t)M * N * sizeof(float)));
-        results.push_back(RunBenchmark<SGEMMSwizzle<128, 128, 16, 8, 8, 16>>(
-            "10_Swizzle_G16", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref, 3, 20));
+        results.push_back(RunBenchmark<SGEMMAsyncCopy<128, 128, 16, 8, 8>>(
+            "06_AsyncCopy", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
 
         // Cleanup
         CHECK_CUDA(cudaFree(d_A));
