@@ -31,6 +31,9 @@ python3 scripts/plot_results.py gemm_results.csv
 | 05a_double_buffer_smem | + Shared memory double buffering |
 | 05b_double_buffer_smem_reg | + Register double buffering |
 | 06_async_copy | + Asynchronous GMEM→SMEM copies (cp.async) |
+| 06_async_copy_autotuned | + Autotuned tile/thread configuration |
+
+The autotuned kernel achieves **88% of cuBLAS** performance (45.4 vs 51.3 TFLOPS at N=8192).
 
 ## Results
 * **NVIDIA H200 SXM (141 GB HBM3e)**
