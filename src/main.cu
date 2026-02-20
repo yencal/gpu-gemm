@@ -14,6 +14,7 @@
 #include "05a_double_buffer_smem.cuh"
 #include "05b_double_buffer_smem_reg.cuh"
 #include "06_async_copy.cuh"
+#include "07_threadblock_swizzling.cuh"
 
 int main(int argc, char** argv)
 {
@@ -91,6 +92,16 @@ int main(int argc, char** argv)
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMAsyncCopy<128, 128, 16, 8, 8>>(
             "06_AsyncCopy", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+
+        // 07:
+        results.push_back(RunBenchmark<SGEMMThreadblockSwizzling<128, 128, 16, 8, 8, 2>>(
+            "07_Swizzle_W2", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+
+        // 07:
+        results.push_back(RunBenchmark<SGEMMThreadblockSwizzling<128, 128, 16, 8, 8, 4>>(
+            "07_Swizzle_W4", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+
+
 
         // Cleanup
         CHECK_CUDA(cudaFree(d_A));
