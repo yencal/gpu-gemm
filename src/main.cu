@@ -18,6 +18,7 @@
 // #include "08_async_copy.cuh"
 // #include "08b_async_copy_both.cuh"
 #include "09_warptiling.cuh"
+#include "10_swizzle.cuh"
 
 int main(int argc, char** argv)
 {
@@ -111,6 +112,19 @@ int main(int argc, char** argv)
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<SGEMMWarptiling<128, 128, 16, 64, 64, 8, 4, 4>>(
             "09_Warptiling", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
+
+        // 10: Swizzle with different GROUP_M values
+        CHECK_CUDA(cudaMemset(d_C, 0, (size_t)M * N * sizeof(float)));
+        results.push_back(RunBenchmark<SGEMMSwizzle<128, 128, 16, 8, 8, 4>>(
+            "10_Swizzle_G4", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref, 3, 20));
+        
+        CHECK_CUDA(cudaMemset(d_C, 0, (size_t)M * N * sizeof(float)));
+        results.push_back(RunBenchmark<SGEMMSwizzle<128, 128, 16, 8, 8, 8>>(
+            "10_Swizzle_G8", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref, 3, 20));
+        
+        CHECK_CUDA(cudaMemset(d_C, 0, (size_t)M * N * sizeof(float)));
+        results.push_back(RunBenchmark<SGEMMSwizzle<128, 128, 16, 8, 8, 16>>(
+            "10_Swizzle_G16", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref, 3, 20));
 
         // Cleanup
         CHECK_CUDA(cudaFree(d_A));
