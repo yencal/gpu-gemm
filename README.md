@@ -10,8 +10,10 @@ A step-by-step exploration of GEMM optimization techniques on NVIDIA GPUs.
 
 ## Build & Run
 
+Make sure to set `ARCH` to match your GPU architecture (e.g., sm_90, sm_80, etc.).
+
 ```bash
-make
+make ARCH=sm_90
 ./gemm_bench
 python3 scripts/plot_results.py gemm_results.csv
 ```
@@ -31,5 +33,5 @@ python3 scripts/plot_results.py gemm_results.csv
 | 06_async_copy | + Asynchronous GMEM→SMEM copies (cp.async) |
 
 ## Results
-
+* **NVIDIA H200 SXM (141 GB HBM3e)**
 ![GEMM Performance](figures/gemm_plot.png)
