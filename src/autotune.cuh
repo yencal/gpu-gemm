@@ -73,7 +73,7 @@ inline std::vector<TuneConfig> GetSGEMMVariants() {
         TUNE_CONFIG(Kernel, 128, 64, 32, 8, 8),
         TUNE_CONFIG(Kernel, 128, 128, 8, 8, 8),
         TUNE_CONFIG(Kernel, 128, 128, 16, 8, 8),
-        TUNE_CONFIG(Kernel, 128, 128, 32, 8, 8),
+        // TUNE_CONFIG(Kernel, 128, 128, 32, 8, 8),  // 64KB - too large
         TUNE_CONFIG(Kernel, 128, 128, 16, 8, 16),
         TUNE_CONFIG(Kernel, 128, 256, 16, 8, 8),
         TUNE_CONFIG(Kernel, 128, 256, 16, 8, 16),
@@ -85,7 +85,7 @@ inline std::vector<TuneConfig> GetSGEMMVariants() {
         TUNE_CONFIG(Kernel, 256, 128, 16, 8, 8),
         TUNE_CONFIG(Kernel, 256, 128, 16, 16, 8),
         TUNE_CONFIG(Kernel, 256, 128, 16, 16, 16),
-        TUNE_CONFIG(Kernel, 256, 256, 16, 16, 16),
+        // TUNE_CONFIG(Kernel, 256, 256, 16, 16, 16),  // 64KB - too large
     };
 }
 
