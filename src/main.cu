@@ -18,7 +18,7 @@
 
 int main(int argc, char** argv)
 {
-    std::vector<int> sizes = {512, 1024, 2048, 4096, 8192};
+    std::vector<int> sizes = {1024, 2048, 4096, 8192};
     std::vector<BenchmarkResult> results;
 
     float alpha = 1.0f;
@@ -26,9 +26,6 @@ int main(int argc, char** argv)
 
     cublasHandle_t handle;
     CHECK_CUBLAS(cublasCreate(&handle));
-
-    // ========== AUTOTUNE ==========
-    RunAutotune<AsyncCopyTag>(GetSGEMMVariants<SGEMMAsyncCopy>());
 
     for (int N : sizes) {
         int M = N, K = N;
@@ -96,7 +93,8 @@ int main(int argc, char** argv)
         results.push_back(RunBenchmark<SGEMMAsyncCopy<128, 128, 16, 8, 8>>(
             "06_AsyncCopy", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));
             
-        // Autotuned kernel
+        // 06: Autotuned kernel
+        RunAutotune<AsyncCopyTag>(GetSGEMMVariants<SGEMMAsyncCopy>(), N);
         CHECK_CUDA(cudaMemset(d_C, 0, M * N * sizeof(float)));
         results.push_back(RunBenchmark<Autotuned<AsyncCopyTag>>(
             "06_AsyncCopy_Autotuned", M, N, K, alpha, d_A, d_B, beta, d_C, d_C_ref));

@@ -77,14 +77,14 @@ inline std::vector<TuneConfig> GetSGEMMVariants() {
         TUNE_CONFIG(Kernel, 128, 128, 16, 8, 16),
         TUNE_CONFIG(Kernel, 128, 256, 16, 8, 8),
         TUNE_CONFIG(Kernel, 128, 256, 16, 8, 16),
-        TUNE_CONFIG(Kernel, 128, 256, 16, 16, 16),
+        // TUNE_CONFIG(Kernel, 128, 256, 16, 16, 16),
         
         // BM=256 variants
         TUNE_CONFIG(Kernel, 256, 64, 16, 8, 8),
         TUNE_CONFIG(Kernel, 256, 64, 16, 16, 8),
         TUNE_CONFIG(Kernel, 256, 128, 16, 8, 8),
         TUNE_CONFIG(Kernel, 256, 128, 16, 16, 8),
-        TUNE_CONFIG(Kernel, 256, 128, 16, 16, 16),
+        // TUNE_CONFIG(Kernel, 256, 128, 16, 16, 16),
         // TUNE_CONFIG(Kernel, 256, 256, 16, 16, 16),  // 64KB - too large
     };
 }
@@ -98,7 +98,7 @@ inline TuneConfig Autotune(
     int M, int N, int K, float alpha,
     const float* A, const float* B,
     float beta, float* C,
-    int warmup = 2, int iters = 5)
+    int warmup = 2, int iters = 10)
 {
     float best_time = FLT_MAX;
     TuneConfig best = variants[0];

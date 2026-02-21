@@ -34,6 +34,12 @@ python3 scripts/plot_results.py gemm_results.csv
 | 06_async_copy_autotuned | + Autotuned tile/thread configuration |
 
 ## Results
+* **NVIDIA RTX 6000 Ada (48 GB)**
+
+The autotuned kernel achieves **100% of cuBLAS** performance (36.7 vs 36.5 TFLOPS at N=8192).
+
+![GEMM Performance](figures/gemm_plot_6000ada.png)
+
 * **NVIDIA H200 SXM (141 GB HBM3e)**
 
 The autotuned kernel achieves **88% of cuBLAS** performance (45.4 vs 51.3 TFLOPS at N=8192).
