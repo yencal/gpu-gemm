@@ -40,6 +40,12 @@ The autotuned kernel achieves **100% of cuBLAS** performance (36.7 vs 36.5 TFLOP
 
 ![GEMM Performance](figures/gemm_plot_6000ada.png)
 
+* **NVIDIA A100-SXM4 (40 GB)**
+
+The autotuned kernel achieves **96%% of cuBLAS** performance (18.5 vs 19.2 TFLOPS at N=8192).
+
+![GEMM Performance](figures/gemm_plot_a100.png)
+
 * **NVIDIA H200 SXM (141 GB HBM3e)**
 
 The autotuned kernel achieves **88% of cuBLAS** performance (45.4 vs 51.3 TFLOPS at N=8192).
